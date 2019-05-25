@@ -24,8 +24,10 @@ class mainwindow(QWidget):
         self.tableView.setShowGrid(True)
         self.tableView.setGeometry(10, 50, 780, 645)
 
+
+
         self.setWindowTitle("Main")
-        # self.setFixedSize(700, 500)
+        self.setFixedSize(700, 500)
         self.tableView.doubleClicked.connect(self.show_details)
 
         # buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
@@ -51,12 +53,16 @@ class mainwindow(QWidget):
         data = pd.read_csv(self.fileName)
         header = list(data)
         data = data.values.tolist()
-
+        self.next_id = len(data)
         items = [QtGui.QStandardItem(str(l)) for l in header]
         self.model.appendRow(items)
         for lst in data:
             items = [QtGui.QStandardItem(str(l)) for l in lst]
             self.model.appendRow(items)
+        # self.tableView.selectAll()
+
+
+
 
     def show_details(self,signal):
         r = signal.row() - 1
@@ -80,11 +86,9 @@ class mainwindow(QWidget):
 
 
     def add_patient(self):
-        print("we r here")
-        dialog = Dialog(self)
+        # print("we r here")
+        dialog = Dialog(self.next_id,self.fileName,self)
         dialog.show()
-
-
 
 class Popup(QDialog):
 
@@ -117,13 +121,9 @@ class Popup(QDialog):
             plt.show()
 
 
-
-
-
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    exp=mainwindow("patient.csv")
+    exp=mainwindow("database/patient.csv")
     exp.loadCsv()
     exp.show()
     sys.exit(app.exec_())
