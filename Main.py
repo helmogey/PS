@@ -2,18 +2,22 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 import sys
-from PyQt5 import QtGui , QtCore
-from PyQt5.QtWidgets import QPushButton,QWidget,QDialogButtonBox ,QGridLayout, QListWidget, QListWidgetItem,QVBoxLayout, QLabel, QApplication, QDialog,QTableView
+from PyQt5 import QtGui
+from PyQt5.QtWidgets import QAction, QPushButton,QWidget,QGridLayout, QListWidget, QListWidgetItem, \
+    QApplication, QDialog,QTableView,QMessageBox, QLabel, QSizePolicy, QMainWindow, QScrollArea
+from PyQt5.QtCore import QDir, Qt
 import pandas as pd
 import numpy as np
 from add_patien import Dialog
+
+from PIL import Image
+from PIL import ImageEnhance
 
 class mainwindow(QWidget):
 
     def __init__(self, fileName , parent=None):
         super(mainwindow, self).__init__(parent)
 
-        # print(parent)
         self.fileName = fileName
 
         self.model = QtGui.QStandardItemModel(self)
@@ -22,25 +26,15 @@ class mainwindow(QWidget):
         self.tableView.setModel(self.model)
         self.tableView.horizontalHeader().setStretchLastSection(True)
         self.tableView.setShowGrid(True)
-        self.tableView.setGeometry(10, 50, 780, 645)
-
-
+        self.tableView.setGeometry(10, 50, 680, 425)
 
         self.setWindowTitle("Main")
         self.setFixedSize(700, 500)
+
         self.tableView.doubleClicked.connect(self.show_details)
 
-        # buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
-        # buttonBox.button(QDialogButtonBox.Ok).setLayout(self)
-        # buttonBox.button(QDialogButtonBox.Ok).setText(self.tr("Add New Patient"))
-        # buttonBox.setGeometry(30, 240, 341, 32)
-
-        # self.buttonBox.accepted.connect(self.accept)
-
-        # title = QLabel('Title')
-        # grid = QGridLayout()
-        # grid.addWidget(title,1, 0)
         add_patient_pushbotton = QPushButton("Add New Patient",self)
+
         mainLayout= QGridLayout()
         mainLayout.setColumnStretch(1, 4)
         mainLayout.setRowStretch(1, 4)
@@ -59,9 +53,6 @@ class mainwindow(QWidget):
         for lst in data:
             items = [QtGui.QStandardItem(str(l)) for l in lst]
             self.model.appendRow(items)
-        # self.tableView.selectAll()
-
-
 
 
     def show_details(self,signal):
@@ -80,46 +71,121 @@ class mainwindow(QWidget):
         else:
             pass
 
-        # ex = mainwindow(txt, exp)
-        # ex.setWindowTitle("Pop")
-        # ex.show()
-
 
     def add_patient(self):
-        # print("we r here")
         dialog = Dialog(self.next_id,self.fileName,self)
         dialog.show()
+
+
+class ImageViewer(QMainWindow):
+    def __init__(self,fileName,parent=None):
+        super(ImageViewer, self).__init__(parent)
+        self.fileName = fileName
+        self.scaleFactor = 0.0
+
+        self.imageLabel = QLabel()
+        self.imageLabel.setBackgroundRole(QtGui.QPalette.Base)
+        self.imageLabel.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self.imageLabel.setScaledContents(True)
+
+        self.scrollArea = QScrollArea()
+        self.scrollArea.setBackgroundRole(QtGui.QPalette.Dark)
+        self.scrollArea.setWidget(self.imageLabel)
+        self.setCentralWidget(self.scrollArea)
+
+        # self.resize(600, 800)
+
+        zoom_in_push = QPushButton("Zoom In",self)
+        zoom_in_push.clicked.connect(self.zoom_in)
+
+        zoom_out_push = QPushButton("Zoom Out",self)
+        zoom_out_push.clicked.connect(self.zoom_out)
+
+        brightness_push = QPushButton("Brightness",self)
+        brightness_push.clicked.connect(self.brightness)
+
+        mainLayout = QGridLayout()
+
+        mainLayout.addWidget(zoom_in_push, 10, 10)
+        zoom_in_push.move(100,0)
+
+        mainLayout.addWidget(zoom_out_push,20,20)
+
+        mainLayout.addWidget(brightness_push,20,20)
+        brightness_push.move(200,0)
+
+        if fileName:
+            image = QtGui.QImage(fileName)
+            if image.isNull():
+                QMessageBox.information(self, "Image Viewer",
+                        "Cannot load %s." % fileName)
+                return
+            self.qpixmap = QtGui.QPixmap.fromImage(image)
+            self.imageLabel.setPixmap(self.qpixmap)
+            self.scaleFactor = 1.0
+            self.imageLabel.adjustSize()
+
+
+    def scaleImage(self, factor):
+        self.scaleFactor *= factor
+        self.imageLabel.resize(self.scaleFactor * self.imageLabel.pixmap().size())
+
+        # self.imageLabel.setGraphicsEffect()
+
+
+        self.adjustScrollBar(self.scrollArea.horizontalScrollBar(), factor)
+        self.adjustScrollBar(self.scrollArea.verticalScrollBar(), factor)
+
+        self.zoomInAct = QAction("Zoom &In (25%)", self, shortcut="Ctrl++", enabled=False, triggered=self.zoom_in)
+        self.zoomOutAct = QAction("Zoom &Out (25%)", self, shortcut="Ctrl+-", enabled=False, triggered=self.zoom_out)
+
+        self.zoomInAct.setEnabled(self.scaleFactor < 3.0)
+        self.zoomOutAct.setEnabled(self.scaleFactor > 0.333)
+
+    def adjustScrollBar(self, scrollBar, factor):
+        scrollBar.setValue(int(factor * scrollBar.value()
+                                + ((factor - 1) * scrollBar.pageStep()/2)))
+
+
+    def zoom_in(self):
+        self.scaleImage(1.25)
+
+    def zoom_out(self):
+        self.scaleImage(0.8)
+
+
+    def brightness(self):
+        # enhancer_object = ImageEnhance.Brightness(str(fileName))
+        # out = enhancer_object.enhance(1.7)
+        # out.show()
+        image = Image.open(self.fileName)
+        enhancer = ImageEnhance.Contrast(image)
+        out = enhancer.enhance(1.7)
+        out.save("hany_updated.jpg")
+        # self.qpixmap.fromImage(out)
+        img2 = ImageViewer("hany_updated.jpg",self)
+        img2.show()
+        # enhancer.enhance(1.7).show("Brightness %f" % 1.7)
+
 
 class Popup(QDialog):
 
     def __init__(self,d,parent=None):
         super(Popup, self).__init__(parent)
-        listWidget = QListWidget(self)
+        self.listWidget = QListWidget(self)
         txt = "id is: " + str(d[0])+ "\nname is: " + str(d[1])+"\nage is: "+str(d[2])+"\nDiagnoses: "+str(d[5])+"\nPress to show the image"
         self.d = d
-        QListWidgetItem(txt, listWidget)
+        QListWidgetItem(txt, self.listWidget)
 
         self.setGeometry(500, 500, 400, 400)
         self.show()
 
-        listWidget.itemDoubleClicked.connect(self.image)
+        self.listWidget.itemDoubleClicked.connect(self.image)
 
 
     def image(self):
-
-        image_path = self.d[4]
-
-        try:
-            img = plt.imread(image_path)
-            plt.imshow(img)
-            plt.show()
-
-        except IsADirectoryError:
-            print("no image found")
-            img = np.zeros((512,512,3))
-            plt.imshow(img)
-            plt.show()
-
+        show_image = ImageViewer(self.d[4],self)
+        show_image.show()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
