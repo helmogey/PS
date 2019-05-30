@@ -81,6 +81,9 @@ class ImageViewer(QMainWindow):
     def __init__(self,fileName,parent=None):
         super(ImageViewer, self).__init__(parent)
         self.fileName = fileName
+        image = Image.open(self.fileName)
+        image.save("photo_edit/temp.jpg")
+        self.fileName_edit = "photo_edit/temp.jpg"
         self.scaleFactor = 0.0
 
         self.imageLabel = QLabel()
@@ -130,8 +133,6 @@ class ImageViewer(QMainWindow):
         self.scaleFactor *= factor
         self.imageLabel.resize(self.scaleFactor * self.imageLabel.pixmap().size())
 
-        # self.imageLabel.setGraphicsEffect()
-
 
         self.adjustScrollBar(self.scrollArea.horizontalScrollBar(), factor)
         self.adjustScrollBar(self.scrollArea.verticalScrollBar(), factor)
@@ -155,17 +156,17 @@ class ImageViewer(QMainWindow):
 
 
     def brightness(self):
-        # enhancer_object = ImageEnhance.Brightness(str(fileName))
-        # out = enhancer_object.enhance(1.7)
-        # out.show()
-        image = Image.open(self.fileName)
+        image = Image.open(self.fileName_edit)
         enhancer = ImageEnhance.Contrast(image)
         out = enhancer.enhance(1.7)
-        out.save("hany_updated.jpg")
-        # self.qpixmap.fromImage(out)
-        img2 = ImageViewer("hany_updated.jpg",self)
-        img2.show()
-        # enhancer.enhance(1.7).show("Brightness %f" % 1.7)
+        out.save(self.fileName_edit)
+        out = QtGui.QImage(self.fileName_edit)
+
+        self.imageLabel.clear()
+        qpixmap = QtGui.QPixmap.fromImage(out)
+        self.imageLabel.setPixmap(qpixmap)
+        self.scaleFactor = 1.0
+        self.imageLabel.adjustSize()
 
 
 class Popup(QDialog):
@@ -181,7 +182,7 @@ class Popup(QDialog):
         self.show()
 
         self.listWidget.itemDoubleClicked.connect(self.image)
-
+        # self.listWidget.clear()
 
     def image(self):
         show_image = ImageViewer(self.d[4],self)
