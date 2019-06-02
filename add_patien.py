@@ -89,9 +89,13 @@ class Dialog(QDialog):
         self.parent.model.clear()
         self.parent.loadCsv()
 
+
+
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    dialog = Dialog(3,"database/patient.csv")
-
+    dialog = Dialog(3,"patient.csv")
+    # dialog = Dialog()
     sys.exit(dialog.exec_())
 

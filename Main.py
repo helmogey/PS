@@ -12,6 +12,8 @@ from add_patien import Dialog
 
 from PIL import Image
 from PIL import ImageEnhance
+import glob
+import os
 
 class mainwindow(QWidget):
 
@@ -67,6 +69,7 @@ class mainwindow(QWidget):
             ex = Popup(d, self)
             ex.setWindowTitle("Pop")
             ex.show()
+            # self.close()
 
         else:
             pass
@@ -77,13 +80,23 @@ class mainwindow(QWidget):
         dialog.show()
 
 
+
+
+
+
 class ImageViewer(QMainWindow):
     def __init__(self,fileName,parent=None):
         super(ImageViewer, self).__init__(parent)
+
+        self.parent = parent
+
         self.fileName = fileName
         image = Image.open(self.fileName)
+
         image.save("photo_edit/temp.jpg")
         self.fileName_edit = "photo_edit/temp.jpg"
+
+
         self.scaleFactor = 0.0
 
         self.imageLabel = QLabel()
@@ -107,15 +120,41 @@ class ImageViewer(QMainWindow):
         brightness_push = QPushButton("Brightness",self)
         brightness_push.clicked.connect(self.brightness)
 
+        sharpness_push = QPushButton("sharpness", self)
+        sharpness_push.clicked.connect(self.sharpness)
+
+        color_push = QPushButton("color", self)
+        color_push.clicked.connect(self.color)
+
+        reset_push = QPushButton("Reset",self)
+        reset_push.clicked.connect(self.reset)
+
+        close_push = QPushButton("Close",self)
+        close_push.clicked.connect(self.close)
+
         mainLayout = QGridLayout()
 
-        mainLayout.addWidget(zoom_in_push, 10, 10)
-        zoom_in_push.move(100,0)
+        # self.addDockWidget()
 
         mainLayout.addWidget(zoom_out_push,20,20)
 
+        mainLayout.addWidget(zoom_in_push, 20, 20)
+        zoom_in_push.move(100,0)
+
         mainLayout.addWidget(brightness_push,20,20)
         brightness_push.move(200,0)
+
+        mainLayout.addWidget(sharpness_push, 20, 20)
+        sharpness_push.move(300, 0)
+
+        mainLayout.addWidget(color_push, 20, 20)
+        color_push.move(400, 0)
+
+        mainLayout.addWidget(reset_push,20,20)
+        reset_push.move(500,0)
+
+        mainLayout.addWidget(close_push,20,20)
+        close_push.move(600,0)
 
         if fileName:
             image = QtGui.QImage(fileName)
@@ -147,7 +186,6 @@ class ImageViewer(QMainWindow):
         scrollBar.setValue(int(factor * scrollBar.value()
                                 + ((factor - 1) * scrollBar.pageStep()/2)))
 
-
     def zoom_in(self):
         self.scaleImage(1.25)
 
@@ -168,6 +206,49 @@ class ImageViewer(QMainWindow):
         self.scaleFactor = 1.0
         self.imageLabel.adjustSize()
 
+    def sharpness(self):
+        self.image = Image.open(self.fileName_edit)
+        enhancer = ImageEnhance.Sharpness(self.image)
+        out = enhancer.enhance(1.7)
+        out.save(self.fileName_edit)
+        out = QtGui.QImage(self.fileName_edit)
+
+        self.imageLabel.clear()
+        qpixmap = QtGui.QPixmap.fromImage(out)
+        self.imageLabel.setPixmap(qpixmap)
+        self.scaleFactor = 1.0
+        self.imageLabel.adjustSize()
+
+    def color(self):
+        self.image = Image.open(self.fileName_edit)
+        enhancer = ImageEnhance.Color(self.image)
+        out = enhancer.enhance(1.7)
+        out.save(self.fileName_edit)
+        out = QtGui.QImage(self.fileName_edit)
+
+        self.imageLabel.clear()
+        qpixmap = QtGui.QPixmap.fromImage(out)
+        self.imageLabel.setPixmap(qpixmap)
+        self.scaleFactor = 1.0
+        self.imageLabel.adjustSize()
+
+
+
+    def reset(self):
+        self.imageLabel.clear()
+        o_i = QtGui.QImage(self.fileName)
+        qpixmap = QtGui.QPixmap.fromImage(o_i)
+        self.imageLabel.setPixmap(qpixmap)
+        self.imageLabel.adjustSize()
+        self.image = Image.open(self.fileName)
+        self.image.save("photo_edit/temp.jpg")
+
+    def close(self):
+        self.destroy()
+
+        self.parent.listWidget.itemDoubleClicked.connect(self.parent.image)
+
+
 
 class Popup(QDialog):
 
@@ -178,15 +259,28 @@ class Popup(QDialog):
         self.d = d
         QListWidgetItem(txt, self.listWidget)
 
+        self.listWidget.itemDoubleClicked.connect(self.image)
+
         self.setGeometry(500, 500, 400, 400)
         self.show()
 
-        self.listWidget.itemDoubleClicked.connect(self.image)
+
         # self.listWidget.clear()
 
     def image(self):
         show_image = ImageViewer(self.d[4],self)
+        # self.hide()
+        # self.listWidget.
         show_image.show()
+        self.listWidget.itemDoubleClicked.disconnect(self.image)
+
+        # self.listWidget.disconnect()
+
+
+
+
+
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
