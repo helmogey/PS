@@ -1,17 +1,17 @@
 import matplotlib
 matplotlib.use('Qt5Agg')
-import matplotlib.pyplot as plt
 import sys
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QAction, QPushButton,QWidget,QGridLayout, QListWidget, QListWidgetItem, \
     QApplication, QDialog,QTableView,QMessageBox, QLabel, QSizePolicy, QMainWindow, QScrollArea, QVBoxLayout, \
-    QHBoxLayout
-from PyQt5.QtCore import QDir, Qt
+    QHBoxLayout, QTreeView
+from PyQt5.QtCore import QDir, Qt, QRect
 import pandas as pd
-import numpy as np
 
 from PIL import Image
 from PIL import ImageEnhance
+
+
 
 
 class mainwindow(QWidget):
@@ -21,76 +21,84 @@ class mainwindow(QWidget):
 
         self.CSV_fileName = fileName
 
-        self.mainLayout = QVBoxLayout(self)
-        self.btn_layout = QHBoxLayout()
 
+        # self.scrollArea = QScrollArea(self)
+        # # self.scrollArea.setGeometry(0,0,700,550)
+        # self.scrollArea.setWidgetResizable(True)
+        #
+        # widget = QWidget()
+        # self.scrollArea.setWidget(widget)
+
+        self.mainLayout = QGridLayout(self)
+        self.btn_layout = QGridLayout()
+
+
+        self.Qtree = QTreeView()
 
         self.model = QtGui.QStandardItemModel(self)
 
-        self.tableView = QTableView(self)
-        self.tableView.setModel(self.model)
-        self.tableView.horizontalHeader().setStretchLastSection(True)
-        self.tableView.setShowGrid(True)
-        self.tableView.setGeometry(10, 50, 680, 425)
+
 
         self.setWindowTitle("Main")
         self.setFixedSize(700,550)
 
-        self.tableView.doubleClicked.connect(self.show_details)
+        self.Qtree.doubleClicked.connect(self.show_details)
 
-        self.add_patient_pushbotton = QPushButton("Add New Patient", self)
-        self.add_patient_pushbotton.setFixedSize(200,30)
+
+        self.add_patient_pushbotton = QPushButton("Add New Patient")
+        self.add_patient_pushbotton.clicked.connect(self.add_patient)
+        self.add_patient_pushbotton.setFixedSize(200, 30)
+        self.btn_layout.addWidget(self.add_patient_pushbotton,0,0)
 
 
         self.zoom_in_push = QPushButton("Zoom In")
         self.zoom_in_push.clicked.connect(self.zoom_in)
+        self.btn_layout.addWidget(self.zoom_in_push,0,0)
 
         self.zoom_out_push = QPushButton("Zoom Out")
         self.zoom_out_push.clicked.connect(self.zoom_out)
+        self.btn_layout.addWidget(self.zoom_out_push,0,1)
 
         self.brightness_push = QPushButton("Brightness")
         self.brightness_push.clicked.connect(self.brightness)
+        self.btn_layout.addWidget(self.brightness_push,0,2)
 
         self.sharpness_push = QPushButton("Sharpness")
         self.sharpness_push.clicked.connect(self.sharpness)
+        self.btn_layout.addWidget(self.sharpness_push,0,3)
 
         self.color_push = QPushButton("Color")
         self.color_push.clicked.connect(self.color)
+        self.btn_layout.addWidget(self.color_push,0,4)
 
         self.reset_push = QPushButton("Reset")
         self.reset_push.clicked.connect(self.reset)
+        self.btn_layout.addWidget(self.reset_push,0,5)
 
         self.close_push = QPushButton("Close")
         self.close_push.clicked.connect(self.end)
+        self.btn_layout.addWidget(self.close_push,0,6)
+
 
         self.imageLabel = QLabel()
-
-        self.scrollArea = QScrollArea()
-        self.scrollArea.setBackgroundRole(QtGui.QPalette.Dark)
-        self.scrollArea.setWidget(self.imageLabel)
 
 
         self.listWidget = QListWidget(self)
         self.listWidget.itemDoubleClicked.connect(self.image)
 
+
+
+
         self.listWidget.hide()
+        self.Qtree.setModel(self.model)
+        self.Qtree.hide()
+        self.mainLayout.addWidget(self.Qtree,1,0)
+        self.mainLayout.addLayout(self.btn_layout, 0, 0)
 
-        self.btn_layout.addWidget(self.zoom_in_push)
-        self.btn_layout.addWidget(self.zoom_out_push)
-        self.btn_layout.addWidget(self.brightness_push)
-        self.btn_layout.addWidget(self.sharpness_push)
-        self.btn_layout.addWidget(self.color_push)
-        self.btn_layout.addWidget(self.reset_push)
-        self.btn_layout.addWidget(self.close_push)
-        self.btn_layout.addWidget(self.add_patient_pushbotton)
-
-        self.mainLayout.addLayout(self.btn_layout)
 
 
     def loadCsv(self):
         self.model.clear()
-        self.tableView.show()
-
         self.zoom_out_push.hide()
         self.zoom_in_push.hide()
         self.close_push.hide()
@@ -98,8 +106,9 @@ class mainwindow(QWidget):
         self.sharpness_push.hide()
         self.brightness_push.hide()
         self.color_push.hide()
+        # self.add_patient_pushbotton.setFixedSize(200,20)
 
-        self.add_patient_pushbotton.clicked.connect(self.add_patient)
+
 
         data = pd.read_csv(self.CSV_fileName)
         header = list(data)
@@ -110,6 +119,8 @@ class mainwindow(QWidget):
         for lst in data:
             items = [QtGui.QStandardItem(str(l)) for l in lst]
             self.model.appendRow(items)
+
+        self.Qtree.show()
 
 
     def show_details(self,signal):
@@ -127,7 +138,7 @@ class mainwindow(QWidget):
         else:
             pass
 
-        self.tableView.close()
+        self.Qtree.close()
         self.add_patient_pushbotton.hide()
         self.listWidget.show()
 
@@ -141,13 +152,11 @@ class mainwindow(QWidget):
         self.mainLayout.addWidget(self.listWidget)
 
 
-
     def add_patient(self):
         self.destroy()
 
 
     def image(self):
-
         self.listWidget.close()
 
         image = Image.open(self.d[4])
@@ -168,11 +177,14 @@ class mainwindow(QWidget):
             self.qpixmap = QtGui.QPixmap.fromImage(image)
             self.imageLabel.setPixmap(self.qpixmap)
             self.scaleFactor = 1.0
-            self.imageLabel.adjustSize()
+
+
+
+
+
 
         # self.imageLabel.setFixedSize(600,550)
         self.imageLabel.show()
-
 
 
         self.add_patient_pushbotton.hide()
@@ -185,6 +197,7 @@ class mainwindow(QWidget):
         self.color_push.show()
 
     def scaleImage(self, factor):
+
         self.scaleFactor *= factor
         self.imageLabel.resize(self.scaleFactor * self.imageLabel.pixmap().size())
 
