@@ -135,21 +135,22 @@ class mainwindow(QWidget):
 
             d = data[r]
 
+            self.Qtree.close()
+            self.add_patient_pushbotton.hide()
+            self.listWidget.show()
+
+            txt = "id is: " + str(d[0]) + "\nname is: " + str(d[1]) + "\nage is: " + str(d[2]) + "\nDiagnoses: " + str(
+                d[5]) + "\nPress to show the image"
+            self.d = d
+
+            QListWidgetItem(txt, self.listWidget)
+
+            self.mainLayout.addWidget(self.listWidget)
+
         else:
             pass
 
-        self.Qtree.close()
-        self.add_patient_pushbotton.hide()
-        self.listWidget.show()
 
-        txt = "id is: " + str(d[0]) + "\nname is: " + str(d[1]) + "\nage is: " + str(d[2]) + "\nDiagnoses: " + str(
-            d[5]) + "\nPress to show the image"
-        self.d = d
-
-
-        QListWidgetItem(txt,self.listWidget)
-
-        self.mainLayout.addWidget(self.listWidget)
 
 
     def add_patient(self):
