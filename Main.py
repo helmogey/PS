@@ -178,10 +178,10 @@ class mainwindow(QWidget):
         if r >= 0:
             data = pd.read_csv(self.CSV_fileName)
             data = data.values.tolist()
-            d = data[r]
+            self.d = data[r]
 
-            txt = "id is: " + str(d[0]) + "\nname is: " + str(d[1]) + "\nage is: " + str(d[2]) + "\nDiagnoses: " + str(
-                d[5]) \
+            txt = "id is: " + str(self.d[0]) + "\nname is: " + str(self.d[1]) + "\nage is: " + str(self.d[2]) + "\nDiagnoses: " + str(
+                self.d[5]) \
                   + "\nPress to show the image"
 
             QListWidgetItem(txt, self.listWidget)
@@ -270,14 +270,15 @@ class mainwindow(QWidget):
         self.listWidget.close()
 
         try:
-            image = Image.open(self.d[4])
+            fileName = self.d[4]
+            image = Image.open(fileName)
 
             image.save("photo_edit/temp.jpg")
             self.fileName_edit = "photo_edit/temp.jpg"
 
             self.scaleFactor = 0.0
 
-            fileName = self.d[4]
+
             if fileName:
                 image = QtGui.QImage(fileName)
                 if image.isNull():
