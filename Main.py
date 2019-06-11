@@ -5,8 +5,15 @@ from PyQt5.QtWidgets import QAction,QWidget, QListWidget, QListWidgetItem, QAppl
 import sys
 import datetime
 import pandas as pd
-from PIL import Image
+from PIL import Image, ImageDraw , ImageFont
 from PIL import ImageEnhance
+
+from PIL import Image
+import matplotlib
+matplotlib.use('Qt5Agg')
+import matplotlib.pyplot as plt
+import numpy as np
+from PIL.ImageQt import ImageQt
 
 
 class mainwindow(QWidget):
@@ -32,7 +39,8 @@ class mainwindow(QWidget):
         self.add_patient_pushbotton = QPushButton("Add New Patient")
         self.add_patient_pushbotton.clicked.connect(self.add_patient)
         self.add_patient_pushbotton.setFixedSize(200, 30)
-        self.btn_layout.addWidget(self.add_patient_pushbotton,0,0)
+        # self.add_patient_pushbotton.move(0,0)
+        self.btn_layout.addWidget(self.add_patient_pushbotton)
 
         self.zoom_in_push = QPushButton("Zoom In")
         self.zoom_in_push.clicked.connect(self.zoom_in)
@@ -65,11 +73,13 @@ class mainwindow(QWidget):
         self.save_push = QPushButton("Add")
         self.save_push.clicked.connect(self.write_to_csv)
         self.mainLayout.addWidget(self.save_push, 1, 0)
+        # self.mainLayout.setColumnStretch(1,1)
         self.save_push.setFixedSize(200, 30)
 
         self.back_push = QPushButton("Cancel")
         self.back_push.clicked.connect(self.loadCsv)
         self.mainLayout.addWidget(self.back_push, 1, 1)
+        # self.mainLayout.setColumnStretch(1,1)
         self.back_push.setFixedSize(200, 30)
 
         self.save_push.hide()
@@ -180,7 +190,8 @@ class mainwindow(QWidget):
             data = data.values.tolist()
             self.d = data[r]
 
-            txt = "id is: " + str(self.d[0]) + "\nname is: " + str(self.d[1]) + "\nage is: " + str(self.d[2]) + "\nDiagnoses: " + str(
+            txt = "id is: " + str(self.d[0]) + "\nname is: " + str(self.d[1]) + "\nage is: " + str(
+                self.d[2]) + "\nDiagnoses: " + str(
                 self.d[5]) \
                   + "\nPress to show the image"
 
@@ -194,9 +205,6 @@ class mainwindow(QWidget):
 
         else:
             pass
-
-
-
 
 
 
@@ -227,14 +235,6 @@ class mainwindow(QWidget):
         self.date_edit_line.setText(str(currentDT))
 
 
-
-        # self.formGroupBox = QGroupBox("Patient Information")
-        # layout = QFormLayout()
-        #
-        #
-        # self.formGroupBox.setLayout(layout)
-
-
     def write_to_csv(self):
         name = self.name_edit_line.text()
         age = str(self.age_edit_line.value())
@@ -261,26 +261,23 @@ class mainwindow(QWidget):
 
         self.loadCsv()
 
-        # Dialog.close(self)
-        # self.parent.model.clear()
-        # self.parent.loadCsv()
-
 
     def image(self):
         self.listWidget.close()
 
         try:
-            fileName = self.d[4]
-            image = Image.open(fileName)
+            image = Image.open(self.d[4])
 
             image.save("photo_edit/temp.jpg")
             self.fileName_edit = "photo_edit/temp.jpg"
 
-            self.scaleFactor = 0.0
+            # self.scaleFactor = 0.0
 
-
+            fileName = self.d[4]
             if fileName:
                 image = QtGui.QImage(fileName)
+                # print(type(image))
+
                 if image.isNull():
                     QMessageBox.information(self, "Image Viewer",
                                             "Cannot load %s." % fileName)
@@ -292,7 +289,22 @@ class mainwindow(QWidget):
             self.imageLabel.show()
 
         except:
-            print("no photo")
+            # img = np.zeros((500,500,3))
+            # image = QtGui.QImage(img, img.shape[1],img.shape[0], img.shape[1] * 3, QtGui.QImage.Format_RGB888)
+
+            img = Image.new('RGB', (700, 600), (0, 0, 0))
+
+            draw = ImageDraw.Draw(img)
+            draw.text((200, 200), "No Photo To Display!", fill='rgb(255, 255, 255)',
+                      font=ImageFont.truetype("/usr/share/fonts/dejavu/DejaVuSans.ttf", 25))
+
+            img = img.convert("RGBA")
+            data = img.tobytes("raw", "RGBA")
+            qim = QtGui.QImage(data, img.size[0], img.size[1], QtGui.QImage.Format_ARGB32)
+            pix = QtGui.QPixmap.fromImage(qim)
+
+            self.imageLabel.setPixmap(pix)
+            self.imageLabel.show()
 
 
         self.add_patient_pushbotton.hide()
