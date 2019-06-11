@@ -82,8 +82,16 @@ class mainwindow(QWidget):
         # self.mainLayout.setColumnStretch(1,1)
         self.back_push.setFixedSize(200, 30)
 
+        self.back1_push = QPushButton("Back")
+        self.back1_push.clicked.connect(self.loadCsv)
+        self.btn_layout.addWidget(self.back1_push)
+        # self.mainLayout.setColumnStretch(1,1)
+        self.back1_push.setFixedSize(200, 30)
+
         self.save_push.hide()
         self.back_push.hide()
+        self.back1_push.hide()
+
 
         self.name_edit_line = QLineEdit()
         self.age_edit_line = QSpinBox()
@@ -144,6 +152,8 @@ class mainwindow(QWidget):
     def loadCsv(self):
         self.model.clear()
         self.add_patient_pushbotton.show()
+        self.back1_push.hide()
+        self.listWidget.hide()
 
         self.name_edit_line.hide()
         self.Name_label.hide()
@@ -181,6 +191,8 @@ class mainwindow(QWidget):
 
 
     def show_details(self,signal):
+        self.back1_push.show()
+
         self.listWidget.clear()
 
         r = signal.row() - 1
@@ -198,6 +210,8 @@ class mainwindow(QWidget):
             QListWidgetItem(txt, self.listWidget)
 
             self.mainLayout.addWidget(self.listWidget)
+            # self.listWidget.setFixedSize(400,200)
+            self.listWidget.setGeometry(1,1,500,200)
 
             self.Qtree.close()
             self.add_patient_pushbotton.hide()
