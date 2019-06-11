@@ -278,6 +278,7 @@ class mainwindow(QWidget):
 
     def image(self):
         self.listWidget.close()
+        self.back1_push.hide()
 
         try:
             image = Image.open(self.d[4])
