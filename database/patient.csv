@@ -1,6 +1,6 @@
 id,name,age,date,photo,Diagnose
 0,hany,35,,photo_database/hany.jpg,has a brocken leg
 1,ayah,29,,photo_database/malak.jpg,
-2,malak,4,,,
+2,malak,4,,data/anas_2019-05-25 22:10:31.039825.jpg,
 3,anas,3,2019-05-25 22:10:31.039825,data/anas_2019-05-25 22:10:31.039825.jpg,dd
 4,amal,30,2019-05-25 23:12:24.402993,data/amal_2019-05-25 23:12:24.402993.jpg,
